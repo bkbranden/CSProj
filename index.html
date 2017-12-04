@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chess</title>
+    <link rel="stylesheet" href="css/chessboard-0.3.0.min.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="js/chessboard-0.3.0.min.js"></script>
+  </head>
+  <body>
+      <h1><center> Chess Game</center></h1>
+      <h2><center> Welcome to the local multiplayer chess game!
+        <br>
+         These pieces are meant to represent finite state machines as each piece can transition to the next state a certain way. </center></h2>
+    <br>
+    <br>
+
+    <div id="board1" style="width: 400px; float: left; margin-left: 550px"></div>
+    <input type="button" id="startBtn" value="Start Position" />
+    <script>
+      
+        var cfg = {
+          position: 'start',
+          showNotation: false,
+          orientation: 'white',
+          draggable: true,
+          moveSpeed: 'slow',
+          snapbackSpeed: 500,
+          snapSpeed: 100,
+        }
+        
+        var board1 = ChessBoard('board1', cfg);
+        
+        $('#startBtn').on('click', board1.start);
+        
+        var chess = new Chess();
+        
+           
+          
+          $('#board1').on('move', board1.flip);
+        
+          var socket = io();
+          
+          function movePiece(board1){
+            $("board1").flip;
+          }
+          
+          socket.on('request', movePiece);
+        
+       
+    </script>
+  </body>
+</html>
