@@ -5,39 +5,144 @@
     <link rel="stylesheet" href="css/chessboard-0.3.0.min.css">
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="js/chessboard-0.3.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js"></script>
   </head>
   <body>
       <h1><center> Chess Game</center></h1>
       <h2><center> Welcome to the local multiplayer chess game!
         <br>
-         These pieces are meant to represent finite state machines as each piece can transition to the next state a certain way. </center></h2>
+         These pieces are meant to represent finite state machines as each piece can transition to the next state a certain way. Each piece's possible moves represents their finite state. S = {(r,c) | r, c exists in N} G = {(r,c) -> (r', c') | r, c, r', c' exists in N and d exists in N+: definition} q = (5, 4). </center></h2>
     <br>
     <br>
 
     <div id="board1" style="width: 400px; float: left; margin-left: 550px"></div>
     <input type="button" id="startBtn" value="Start Position" />
     <input type="button" id="flipOrientationBtn" value="Flip orientation" /><br />
+    <input type="button" id="clearBtn" value="Clear" /><br />
+    <br>
+    <input type="button" id="knightStart" value="Knight" /><br />
+    <input type="button" id="bishopStart" value="Bishop" /><br />
+    <input type="button" id="KingStart" value="King" /><br />
+    <input type="button" id="RookStart" value="Rook" /><br />
+    <input type="button" id="QueenStart" value="Queen" /><br />
+    <input type="button" id="PawnStart" value="Pawn" /><br />
+    <h3 type="text" id="messages"></h3><br />
     <script>
-      
+        var messageKnight = "This is a knight, it can only move either up/down 1 space and left/right 2 spaces or up/down 2 spaces and left/right 1 space. The transition is G = {(r,c) -> (r', c') | r, c, r', c' exists in N: r' = r +- 2, c' = c +- 1 or r' = r +- 1, c' = c +- 2} .";
+        var messageBishop = "This is a bishop, it can move any diagonal space on its same color, or the same +- rows and columns for the next state. The transition is G = {(r,c) -> (r', c') | r, c, r', c' exists in N and d exists in N+: r' = r +- d, c' = c +- d}.";
+        var messageRook = "This is a rook, it can move any vertical or horizontal space from its start state. The transition to the next state is G = {(r,c) -> (r', c') | r, c, r', c' exists in N and d exists in N+: r' = r +- d, c' = c (horizontal) or r' = r, c' = c +- d (vertical)}.";
+        var messageQueen = "This is a queen, it can move any vertical, horizontal, or diagonal space from its start state. The transition to the next state G = {(r,c) -> (r', c') | r, c, r', c' exists in N and d exists in N+: r' = r +- d, c' = c+- d (diagonal) or r' = r +- d, c' = c (horizontal) or r' = r, c' = c +- d (vertical)}.";
+        var messageKing = "This is a king, it can move only one space in any vertical, horizontal, or diagonal direction from its start state. The transition to the next state is G = {(r,c) -> (r', c') | r, c, r', c' exists in N and d exists in N+: r' = r +- 1, c' = c+- 1 (diagonal) or r' = r +- 1, c' = c (horizontal) or r' = r, c' = c +- 1 (vertical)}.";
+        var messagePawn = "This is a pawn, it can move only one space vertically from its start state. The transition to the next state is G = {(r,c) -> (r', c') | r, c, r', c' exists in N and d exists in N+: r' = r, c' = c + 1}.";
+        var empty = "";
+
         var cfg = {
           position: 'start',
-          showNotation: false,
+          showNotation: true,
           orientation: 'white',
           draggable: true,
           moveSpeed: 'slow',
           snapbackSpeed: 500,
           snapSpeed: 100,
+          onDrop: onDrop,
+          onSnapEnd: onSnapEnd
         }
-        
+
+        var game = new Chess();
+
         var board1 = ChessBoard('board1', cfg);
-        
-        $('#startBtn').on('click', board1.start);
+
+        $('#startBtn').on('click', function() {
+          board1.start(false);
+          clearText(empty);
+        });
         $('#flipOrientationBtn').on('click', board1.flip);
-              
-        
-        
-        
-       
+        $('#clearBtn').on('click', function() {
+          board1.clear(false);
+          clearText(empty);
+        });
+        $('#knightStart').on('click', function() {
+          board1.position({
+            e4: 'wN'
+          });
+          addMessages(messageKnight);
+        });
+        $('#bishopStart').on('click', function() {
+          board1.position({
+            e4: 'wB'
+          });
+          addMessages(messageBishop);
+        });
+        $('#RookStart').on('click', function() {
+          board1.position({
+            e4: 'wR'
+          });
+          addMessages(messageRook);
+        });
+        $('#QueenStart').on('click', function() {
+          board1.position({
+            e4: 'wQ'
+          });
+          addMessages(messageQueen);
+        });
+        $('#KingStart').on('click', function() {
+          board1.position({
+            e4: 'wK'
+          });
+          addMessages(messageKing);
+        });
+        $('#PawnStart').on('click', function() {
+          board1.position({
+            e4: 'wP'
+          });
+          addMessages(messagePawn);
+        });
+
+        function addMessages(message){
+            $("#messages").text(`${message}`);
+          }
+
+        function clearText(message){
+          $("#messages").text(`${message}`);
+        }
+
+        function switchTurns(){
+          if (game.move() === null) {
+            console.log("Move success");
+            return 'snapback';
+          } else {
+            console.log("Move success");
+             board1.flip;
+           }
+        }
+
+
+
+
+
+        var onDrop = function(source, target) {
+        // see if the move is legal
+        var move = game.move({
+          from: source,
+          to: target,
+          promotion: 'q' // NOTE: always promote to a queen for example simplicity
+        });
+
+        // illegal move
+        if (move === null) {
+          console.log("Move success");
+          return 'snapback';
+        } else {
+          console.log("Move success");
+           board1.flip;
+         }
+
+      };
+
+      var onSnapEnd = function() {
+        board.position(game.fen());
+      };
+
     </script>
   </body>
 </html>
